@@ -1,4 +1,3 @@
-
 package com.example.retornosAPI;
 
 import org.springframework.boot.SpringApplication;
@@ -10,5 +9,4 @@ public class RetornosApiApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(RetornosApiApplication.class, args);
 	}
-
 }
