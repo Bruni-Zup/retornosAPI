@@ -1,9 +1,9 @@
 package com.example.retornosAPI.models;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
+
 
 public record Product(
         Long id,
@@ -21,8 +21,10 @@ public record Product(
         Integer stockQuantity,
 
         @NotBlank(message = "A categoria é obrigatória.")
+        @Size(min = 3, max = 50, message = "A categoria deve ter entre 3 e 50 caracteres.")
         String category,
 
+        @NotBlank(message = "A descrição não pode estar em branco.")
         @Size(max = 500, message = "A descrição não pode ter mais de 500 caracteres.")
         String description
 ) {
