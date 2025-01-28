@@ -1,16 +1,76 @@
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
-import javax.validation.constraints.Size;
+package com.example.retornosAPI.services;
 
-public record Product(
-        Long id,
+import com.example.retornosAPI.models.Product;
+import com.example.retornosAPI.models.ProductEntity;
+import com.example.retornosAPI.repositories.ProductRepository;
+import org.springframework.stereotype.Service;
 
-        @NotBlank(message = "Nome do produto é obrigatório.")
-        @Size(min = 3, max = 100, message = "Nome do produto deve ter entre 3 e 100 caracteres.")
-        String name,
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-        @NotNull(message = "Preço é obrigatório.")
-        @Positive(message = "Preço deve ser maior que 0.")
-        Double price
-) {}
+@Service
+public class ProductService {
+
+        private final ProductRepository repository;
+
+        public ProductService(ProductRepository repository) {
+                this.repository = repository;
+        }
+
+        public Product createProduct(Product product) {
+                ProductEntity entity = new ProductEntity(null, product.name(), product.price());
+                ProductEntity savedEntity = repository.save(entity);
+                return new Product(savedEntity.getId(), savedEntity.getName(), savedEntity.getPrice(), null, null, null);
+        }
+
+        public Product getProductById(Long id) {
+                ProductEntity entity = repository.findById(id)
+                        .orElseThrow(() -> new RuntimeException("Product not found"));
+                return new Product(entity.getId(), entity.getName(), entity.getPrice(), null, null, null);
+        }
+
+        public List<Product> getAllProducts() {
+                return repository.findAll().stream()
+                        .map(entity -> new Product(entity.getId(), entity.getName(), entity.getPrice()))
+                        .collect(Collectors.toList());
+        }
+
+        public void deleteProduct(Long id) {
+                repository.deleteById(id);
+        }
+
+        // Atualizar um produto existente
+        public Product updateProduct(Long id, Product updatedProduct) {
+                // Verificar se o produto existe
+                ProductEntity existingEntity = repository.findById(id)
+                        .orElseThrow(() -> new RuntimeException("Product with ID " + id + " not found"));
+
+                // Atualizar os dados do produto
+                existingEntity.setName(updatedProduct.name());
+                existingEntity.setPrice(updatedProduct.price());
+
+                // Salvar as alterações no banco de dados
+                ProductEntity savedEntity = repository.save(existingEntity);
+
+                // Retornar o produto atualizado
+                return new Product(savedEntity.getId(), savedEntity.getName(), savedEntity.getPrice(), null, null, null);
+        }
+
+        // Buscar produtos pelo nome
+        public List<Product> getProductsByName(String name) {
+                if (name == null || name.isEmpty()) {
+                        throw new IllegalArgumentException("O nome do produto não pode ser vazio.");
+                }
+
+                List<ProductEntity> entities = repository.findByNameContainingIgnoreCase(name);
+                if (entities.isEmpty()) {
+                        System.out.println("Nenhum produto encontrado com o nome: " + name);
+                } else {
+                        System.out.println("Produtos encontrados com o nome '" + name + "': " + entities.size());
+                }
+                return entities.stream()
+                        .map(entity -> new Product(entity.getId(), entity.getName(), entity.getPrice()))
+                        .collect(Collectors.toList());
+        }
+}
